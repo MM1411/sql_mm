@@ -269,7 +269,7 @@ class MMSPluginConfig(object):
       cxx.linkflags += ['-static-libstdc++']
 
       if HasLLDLinker():
-        # Keeps STB_GNU_UNIQUE symbols out of the binary. The KHook templates emit them, and they
+        # Keeps STB_GNU_UNIQUE symbols out of the binary. Template statics can emit them, and they
         # pin the library in memory across dlclose, which is how Metamod unloads plugins.
         cxx.linkflags += ['-fuse-ld=lld', '-Wl,--no-gnu-unique']
     elif cxx.target.platform == 'windows':
@@ -293,7 +293,8 @@ class MMSPluginConfig(object):
     cxx.cxxincludes += [
       os.path.join(context.currentSourcePath),
       os.path.join(mms_core_path),
-      os.path.join(self.mms_root, 'third_party', 'khook', 'include'),
+      os.path.join(mms_core_path, 'sourcehook'),
+      os.path.join(context.currentSourcePath, 'compat'),
     ]
 
     defines = []

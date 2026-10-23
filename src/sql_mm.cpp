@@ -60,10 +60,9 @@ CGlobalVars *GetGameGlobals()
 
 PLUGIN_EXPOSE(SQLPlugin, g_SQLPlugin);
 
-SQLPlugin::SQLPlugin() :
-    m_ServerGamePostSimulate(&IGameSystem::OnServerGamePostSimulate, this, nullptr, &SQLPlugin::Hook_ServerGamePostSimulate)
-{
-}
+SH_DECL_HOOK1_void(IGameSystem, OnServerGamePostSimulate, SH_NOATTRIB, 0, const EventServerGamePostSimulate_t *);
+
+int serverGamePostSimulateHook = 0;
 
 bool SQLPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool late)
 {
@@ -88,17 +87,20 @@ bool SQLPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, boo
     g_mysqlClient = new CMySQLClient();
     g_sqliteClient = new SqClient();
     g_sqlInterface = new SQLInterface();
-    // KHook::Virtual dereferences the pointer it is given to reach the vtable, so hooking a bare
-    // vtable (what SH_ADD_DVPHOOK took) means handing it a fake instance holding that vtable.
-    void *vtable = serverModule->FindVirtualTable("CEntityDebugGameSystem");
-    m_ServerGamePostSimulate.AddGlobal((IGameSystem *)&vtable);
+    // clang-format off
+    serverGamePostSimulateHook = SH_ADD_DVPHOOK(IGameSystem,
+        OnServerGamePostSimulate,
+        (IGameSystem *)serverModule->FindVirtualTable("CEntityDebugGameSystem"),
+        SH_MEMBER(this, &SQLPlugin::Hook_ServerGamePostSimulate),
+        true);
+    // clang-format on
 
     return true;
 }
 
 bool SQLPlugin::Unload(char *error, size_t maxlen)
 {
-    m_ServerGamePostSimulate.ClearHooks();
+    SH_REMOVE_HOOK_ID(serverGamePostSimulateHook);
 
     while (!g_vecMysqlConnections.empty())
     {
@@ -130,7 +132,7 @@ void *SQLPlugin::OnMetamodQuery(const char *iface, int *ret)
     return nullptr;
 }
 
-KHook::Return<void> SQLPlugin::Hook_ServerGamePostSimulate(IGameSystem *, const EventServerGamePostSimulate_t *)
+void SQLPlugin::Hook_ServerGamePostSimulate(const EventServerGamePostSimulate_t *)
 {
     g_bInFrame = true;
     for (size_t i = 0; i < g_vecMysqlConnections.size(); i++)
@@ -157,8 +159,6 @@ KHook::Return<void> SQLPlugin::Hook_ServerGamePostSimulate(IGameSystem *, const 
             connection->Destroy();
         }
     }
-
-    return {KHook::Action::Ignore};
 }
 
 const char *SQLPlugin::GetLicense()

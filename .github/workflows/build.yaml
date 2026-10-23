@@ -36,8 +36,12 @@ jobs:
         with:
           submodules: true
 
-      - name: Clone Metamod:Source
-        run: git clone --depth 1 --recursive https://github.com/alliedmodders/metamod-source ../metamod-source
+      - name: Clone Metamod:Source (2.0 build 1411, last SourceHook-only build)
+        shell: bash
+        run: |
+          git clone --recursive https://github.com/alliedmodders/metamod-source ../metamod-source
+          git -C ../metamod-source checkout 465f1a02081996a0eb0665a9fa0189c092a82936
+          git -C ../metamod-source submodule update --init --recursive
 
       - name: Clone S2SDK (cs2)
         run: git clone --depth 1 --branch cs2 https://github.com/alliedmodders/s2sdk ../hl2sdk-cs2
@@ -77,8 +81,12 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Clone Metamod:Source
-        run: git clone --depth 1 --recursive https://github.com/alliedmodders/metamod-source ../metamod-source
+      - name: Clone Metamod:Source (2.0 build 1411, last SourceHook-only build)
+        shell: bash
+        run: |
+          git clone --recursive https://github.com/alliedmodders/metamod-source ../metamod-source
+          git -C ../metamod-source checkout 465f1a02081996a0eb0665a9fa0189c092a82936
+          git -C ../metamod-source submodule update --init --recursive
 
       - name: Clone S2SDK (cs2)
         run: git clone --depth 1 --branch cs2 https://github.com/alliedmodders/s2sdk ../hl2sdk-cs2

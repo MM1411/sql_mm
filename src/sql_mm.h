@@ -29,14 +29,12 @@
 class SQLPlugin : public ISmmPlugin, public IMetamodListener
 {
 public:
-    SQLPlugin();
-
     bool Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool late);
     bool Unload(char *error, size_t maxlen);
     void *OnMetamodQuery(const char *iface, int *ret);
 
 public: // hooks
-    KHook::Return<void> Hook_ServerGamePostSimulate(IGameSystem *, const EventServerGamePostSimulate_t *);
+    void Hook_ServerGamePostSimulate(const EventServerGamePostSimulate_t *);
 
 public:
     const char *GetAuthor();
@@ -47,9 +45,6 @@ public:
     const char *GetVersion();
     const char *GetDate();
     const char *GetLogTag();
-
-protected:
-    KHook::Virtual<IGameSystem, void, const EventServerGamePostSimulate_t *> m_ServerGamePostSimulate;
 };
 
 extern SQLPlugin g_SQLPlugin;
